@@ -3,9 +3,7 @@
 [![Official Site](https://img.shields.io/badge/site-alphatab.net-blue.svg)](https://www.alphatab.net/)
 [![Documentation](https://img.shields.io/badge/docs-alphatab.net-blue.svg)](https://www.alphatab.net/docs/introduction)
 [![License MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-green.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
-[![Twitter](https://img.shields.io/badge/twitter-alphaTabMusic-blue.svg)](https://twitter.com/alphaTabMusic)
-[![Facebook](https://img.shields.io/badge/facebook-alphaTabMusic-blue.svg)](https://facebook.com/alphaTabMusic)
-[![Build](https://github.com/CoderLine/alphaTab/workflows/Build/badge.svg?branch=develop)](https://github.com/CoderLine/alphaTab/actions/workflows/build.yml)
+[![Build](https://github.com/CoderLine/alphaTab/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/CoderLine/alphaTab/actions/workflows/build.yml)
 
 alphaTab is a cross platform music notation and guitar tablature rendering library. You can use alphaTab within your own website or application to load and display music sheets from data sources like Guitar Pro or the built in markup language named alphaTex.
 
