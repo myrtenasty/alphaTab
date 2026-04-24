@@ -133,8 +133,6 @@ public class AlphaTab : ContentControl
             IsHitTestVisible = false
         };
         _layoutPanel = new Canvas();
-        _layoutPanel.Children.Add(_renderPanel);
-        _layoutPanel.Children.Add(_overlayPanel);
         _scrollView = new ScrollViewer
         {
             Content = _layoutPanel,
@@ -143,7 +141,8 @@ public class AlphaTab : ContentControl
         };
         Content = _scrollView;
 
-        Api = new AlphaTabApiBase<AlphaTab>(new AvaloniaUiFacade(_scrollView, _renderPanel, _overlayPanel), this);
+        Api = new AlphaTabApiBase<AlphaTab>(new AvaloniaUiFacade(_scrollView, _layoutPanel, _renderPanel, _overlayPanel), this);
+        _layoutPanel.Children.Add(_overlayPanel);
     }
 
     /// <inheritdoc />

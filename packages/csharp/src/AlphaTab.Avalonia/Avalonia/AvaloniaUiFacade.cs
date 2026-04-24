@@ -19,17 +19,23 @@ namespace AlphaTab.Avalonia;
 internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 {
     private readonly ScrollViewer _scrollViewer;
+    private readonly Canvas _layoutPanel;
     private readonly Canvas _renderPanel;
     private readonly Canvas _overlayPanel;
     private readonly Dictionary<string, Image> _resultIdToElementLookup = new Dictionary<string, Image>();
     private event Action? InternalRootContainerBecameVisible;
+    private double _contentWidth;
+    private double _contentHeight;
+    private double _horizontalOverflow;
+    private double _verticalOverflow;
 
     public override IContainer RootContainer { get; }
     public override IEventEmitter RootContainerBecameVisible { get; }
 
-    public AvaloniaUiFacade(ScrollViewer scrollViewer, Canvas renderPanel, Canvas overlayPanel)
+    public AvaloniaUiFacade(ScrollViewer scrollViewer, Canvas layoutPanel, Canvas renderPanel, Canvas overlayPanel)
     {
         _scrollViewer = scrollViewer;
+        _layoutPanel = layoutPanel;
         _renderPanel = renderPanel;
         _overlayPanel = overlayPanel;
         RootContainer = new AvaloniaControlContainer(scrollViewer);
@@ -146,8 +152,27 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     public override void InitialRender()
     {
-        Api.Renderer.PreRender.On(_ => { _resultIdToElementLookup.Clear(); });
+        Api.Renderer.PreRender.On(_ =>
+        {
+            _resultIdToElementLookup.Clear();
+            _contentWidth = 0;
+            _contentHeight = 0;
+            UpdateCanvasSize();
+        });
         base.InitialRender();
+    }
+
+    private void UpdateCanvasSize()
+    {
+        var width = Math.Max(0, _contentWidth + _horizontalOverflow);
+        var height = Math.Max(0, _contentHeight + _verticalOverflow);
+
+        _renderPanel.Width = width;
+        _renderPanel.Height = height;
+        _overlayPanel.Width = width;
+        _overlayPanel.Height = height;
+        _layoutPanel.Width = width;
+        _layoutPanel.Height = height;
     }
 
     public override void TriggerEvent(IContainer container, string eventName,
@@ -234,6 +259,10 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
                 placeholder.Width = renderResult.Width;
                 placeholder.Height = renderResult.Height;
                 _resultIdToElementLookup[renderResult.Id] = placeholder;
+
+                _contentWidth = Math.Max(_contentWidth, renderResult.X + renderResult.Width);
+                _contentHeight = Math.Max(_contentHeight, renderResult.Y + renderResult.Height);
+                UpdateCanvasSize();
 
                 counter.Count++;
             }
@@ -367,5 +396,16 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         canvas.Margin = isVertical
             ? new Thickness(0, 0, 0, overflow)
             : new Thickness(0, 0, overflow, 0);
+
+        if (isVertical)
+        {
+            _verticalOverflow = overflow;
+        }
+        else
+        {
+            _horizontalOverflow = overflow;
+        }
+
+        UpdateCanvasSize();
     }
 }

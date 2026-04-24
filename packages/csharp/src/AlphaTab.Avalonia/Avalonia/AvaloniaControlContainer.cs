@@ -79,14 +79,18 @@ internal class AvaloniaControlContainer : IContainer
         Dispatcher.UIThread.Post(() =>
         {
             var childControl = ((AvaloniaControlContainer)child).Control;
-            if (Control is Panel panel)
-            {
-                panel.Children.Add(childControl);
-            }
-            else if (Control is ContentControl contentControl)
-            {
-                contentControl.Content = childControl;
-            }
+                if (Control is Panel panel)
+                {
+                    panel.Children.Add(childControl);
+                }
+                else if (Control is ScrollViewer { Content: Panel scrollPanel })
+                {
+                    scrollPanel.Children.Add(childControl);
+                }
+                else if (Control is ContentControl contentControl)
+                {
+                    contentControl.Content = childControl;
+                }
             else if (Control is Decorator decorator)
             {
                 decorator.Child = childControl;

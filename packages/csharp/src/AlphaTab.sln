@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlphaTab.Windows", "AlphaTa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlphaTab.Avalonia", "AlphaTab.Avalonia\AlphaTab.Avalonia.csproj", "{B9290577-2D69-4878-B7E6-4283F3F0C008}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlphaTab.AvaloniaApp", "AlphaTab.AvaloniaApp\AlphaTab.AvaloniaApp.csproj", "{1CFE0770-9C07-4F82-96FF-A087B47CA55D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{B9290577-2D69-4878-B7E6-4283F3F0C008}.Release|x64.Build.0 = Release|Any CPU
 		{B9290577-2D69-4878-B7E6-4283F3F0C008}.Release|x86.ActiveCfg = Release|Any CPU
 		{B9290577-2D69-4878-B7E6-4283F3F0C008}.Release|x86.Build.0 = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|x64.Build.0 = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Debug|x86.Build.0 = Debug|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|x64.ActiveCfg = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|x64.Build.0 = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|x86.ActiveCfg = Release|Any CPU
+		{1CFE0770-9C07-4F82-96FF-A087B47CA55D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

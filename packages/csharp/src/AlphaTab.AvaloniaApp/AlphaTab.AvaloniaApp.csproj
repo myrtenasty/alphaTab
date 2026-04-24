@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <RootNamespace>AlphaTab.AvaloniaApp</RootNamespace>
+        <AssemblyName>AlphaTab.AvaloniaApp</AssemblyName>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>8</LangVersion>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\AlphaTab\AlphaTab.csproj" />
+        <ProjectReference Include="..\AlphaTab.Avalonia\AlphaTab.Avalonia.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    </ItemGroup>
+
+</Project>
