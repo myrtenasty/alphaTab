@@ -6,7 +6,7 @@
         <AssemblyName>AlphaTab.AvaloniaApp</AssemblyName>
         <TargetFramework>net8.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>8</LangVersion>
+        <LangVersion>12</LangVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
 
@@ -16,8 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1" />
     </ItemGroup>
 
 </Project>

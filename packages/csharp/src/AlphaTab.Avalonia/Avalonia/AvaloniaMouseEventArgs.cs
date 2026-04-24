@@ -10,9 +10,7 @@ internal class AvaloniaMouseEventArgs : IMouseEventArgs
     public AvaloniaMouseEventArgs(PointerEventArgs args)
     {
         _args = args;
-        var properties = args.GetCurrentPoint(null).Properties;
-        IsLeftMouseButton = properties.IsLeftButtonPressed ||
-                            properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed;
+        IsLeftMouseButton = args.GetCurrentPoint(null).Properties.IsLeftButtonPressed;
     }
 
     public bool IsLeftMouseButton { get; }
