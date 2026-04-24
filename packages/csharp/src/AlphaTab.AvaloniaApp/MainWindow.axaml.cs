@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AlphaTab.Avalonia;
 using AlphaTab.Model;
 using Avalonia.Controls;
 using Avalonia.Interactivity;

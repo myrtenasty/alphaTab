@@ -36,7 +36,7 @@ internal static class TestGlobals
 
     public static void Fail(object? message)
     {
-        Assert.Fail(Convert.ToString(message));
+        Assert.Fail(Convert.ToString(message)!);
     }
 
     private static readonly Dictionary<string, int> SnapshotAssertionCounters = new();
