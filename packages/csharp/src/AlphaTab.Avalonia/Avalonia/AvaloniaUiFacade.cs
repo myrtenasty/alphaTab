@@ -11,6 +11,7 @@ using AlphaTab.Synth;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Image = Avalonia.Controls.Image;
 
@@ -28,6 +29,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
     private double _contentHeight;
     private double _horizontalOverflow;
     private double _verticalOverflow;
+    private double _dpiScale = 1.0;
 
     public override IContainer RootContainer { get; }
     public override IEventEmitter RootContainerBecameVisible { get; }
@@ -39,7 +41,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         _renderPanel = renderPanel;
         _overlayPanel = overlayPanel;
         RootContainer = new AvaloniaControlContainer(scrollViewer);
-        Environment.HighDpiFactor = 1.0;
+        UpdateDpiScale(false);
         _scrollViewer.SizeChanged += OnRootContainerPossiblyBecameVisible;
         _scrollViewer.PropertyChanged += OnRootContainerPropertyChanged;
         _scrollViewer.AttachedToVisualTree += OnRootContainerAttachedToVisualTree;
@@ -69,12 +71,36 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     private void OnRootContainerAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        UpdateDpiScale(true);
         NotifyRootContainerBecameVisibleIfNeeded();
     }
 
     private void OnRootContainerPossiblyBecameVisible(object? sender, SizeChangedEventArgs e)
     {
+        UpdateDpiScale(true);
         NotifyRootContainerBecameVisibleIfNeeded();
+    }
+
+    private void UpdateDpiScale(bool renderOnChange)
+    {
+        var scale = TopLevel.GetTopLevel(_scrollViewer)?.RenderScaling ?? 1.0;
+        if (scale <= 0)
+        {
+            scale = 1.0;
+        }
+
+        if (Math.Abs(_dpiScale - scale) < 0.001)
+        {
+            Environment.HighDpiFactor = scale;
+            return;
+        }
+
+        _dpiScale = scale;
+        Environment.HighDpiFactor = scale;
+        if (renderOnChange && Api != null)
+        {
+            Api.Render();
+        }
     }
 
     private void NotifyRootContainerBecameVisibleIfNeeded()
@@ -111,6 +137,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
     private void OnSettingsChanged(Settings settings)
     {
         settings.Core.EnableLazyLoading = false;
+        UpdateDpiScale(false);
         Api.Settings = settings;
         Api.UpdateSettings();
         Api.Render();
@@ -118,6 +145,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     protected override void RenderTracks()
     {
+        UpdateDpiScale(false);
         SettingsContainer.RenderTracks();
     }
 
@@ -164,8 +192,8 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     private void UpdateCanvasSize()
     {
-        var width = Math.Max(0, _contentWidth + _horizontalOverflow);
-        var height = Math.Max(0, _contentHeight + _verticalOverflow);
+        var width = Math.Max(0, Math.Ceiling(_contentWidth + _horizontalOverflow + 2));
+        var height = Math.Max(0, Math.Ceiling(_contentHeight + _verticalOverflow + 2));
 
         _renderPanel.Width = width;
         _renderPanel.Height = height;
@@ -184,6 +212,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
     {
         Dispatcher.UIThread.Post(() =>
         {
+            UpdateDpiScale(false);
             var renderResult = r;
             if (renderResult == null ||
                 !_resultIdToElementLookup.TryGetValue(renderResult.Id, out var placeholder))
@@ -221,6 +250,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
     {
         Dispatcher.UIThread.Post(() =>
         {
+            UpdateDpiScale(false);
             var renderResult = r;
             if (renderResult == null)
             {
@@ -249,19 +279,25 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
                     placeholder = new Image
                     {
                         Stretch = Stretch.Fill,
-                        IsHitTestVisible = false
+                        IsHitTestVisible = false,
+                        UseLayoutRounding = true
                     };
+                    RenderOptions.SetBitmapInterpolationMode(placeholder, BitmapInterpolationMode.None);
                     _renderPanel.Children.Add(placeholder);
                 }
 
-                Canvas.SetLeft(placeholder, renderResult.X);
-                Canvas.SetTop(placeholder, renderResult.Y);
-                placeholder.Width = renderResult.Width;
-                placeholder.Height = renderResult.Height;
+                var left = Math.Round(renderResult.X, 2);
+                var top = Math.Round(renderResult.Y, 2);
+                var width = Math.Ceiling(renderResult.Width);
+                var height = Math.Ceiling(renderResult.Height);
+                Canvas.SetLeft(placeholder, left);
+                Canvas.SetTop(placeholder, top);
+                placeholder.Width = width;
+                placeholder.Height = height;
                 _resultIdToElementLookup[renderResult.Id] = placeholder;
 
-                _contentWidth = Math.Max(_contentWidth, renderResult.X + renderResult.Width);
-                _contentHeight = Math.Max(_contentHeight, renderResult.Y + renderResult.Height);
+                _contentWidth = Math.Max(_contentWidth, left + width);
+                _contentHeight = Math.Max(_contentHeight, top + height);
                 UpdateCanvasSize();
 
                 counter.Count++;
