@@ -5,36 +5,80 @@
         xmlns:at="clr-namespace:AlphaTab.Avalonia;assembly=AlphaTab.Avalonia"
         x:Class="AlphaTab.AvaloniaApp.MainWindow"
         mc:Ignorable="d"
-        Title="alphaTab Avalonia"
-        Width="1200"
-        Height="800"
-        MinWidth="800"
-        MinHeight="600">
-  <Grid RowDefinitions="Auto,Auto,*" Margin="16">
-    <StackPanel Grid.Row="0"
-                Orientation="Horizontal"
-                Spacing="8">
-      <Button HorizontalAlignment="Left"
-              Content="打开乐谱文件"
-              Click="OnOpenFileClick" />
-      <Button HorizontalAlignment="Left"
-              Content="播放/暂停"
-              Click="OnPlayPauseClick" />
-      <Button HorizontalAlignment="Left"
-              Content="停止"
-              Click="OnStopClick" />
-    </StackPanel>
+        Title="alphaTab Studio"
+        Width="1440"
+        Height="960"
+        MinWidth="960"
+        MinHeight="680"
+        FontFamily="Segoe UI, Microsoft YaHei UI, Microsoft YaHei, Arial">
+  <Window.Background>
+    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+      <GradientStop Color="#EFF6FF" Offset="0" />
+      <GradientStop Color="#F8FAFC" Offset="0.48" />
+      <GradientStop Color="#ECFEFF" Offset="1" />
+    </LinearGradientBrush>
+  </Window.Background>
 
-    <TextBlock Grid.Row="1"
-               Margin="0,12,0,12"
-               Text="使用上方按钮控制打开、播放/暂停和停止"
-               Opacity="0.75" />
-
-    <Border Grid.Row="2"
+  <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="18">
+    <Border Grid.Row="0"
+            CornerRadius="22"
+            Padding="22,18"
+            Background="#F7FFFFFF"
+            BorderBrush="#DCE7F3"
             BorderThickness="1"
-            CornerRadius="6"
-            Padding="8">
-      <at:AlphaTab x:Name="AlphaTabView" />
+            BoxShadow="0 16 42 0 #1A0F172A">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+        <TextBlock Grid.Column="0"
+                   Text="alphaTab Studio"
+                   FontSize="28"
+                   FontWeight="SemiBold"
+                   Foreground="#0F172A"
+                   VerticalAlignment="Center" />
+
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    Spacing="10">
+          <Button Content="打开乐谱文件"
+                  Click="OnOpenFileClick"
+                  Padding="18,10"
+                  CornerRadius="14"
+                  FontWeight="SemiBold"
+                  Foreground="White"
+                  Background="#2563EB" />
+          <Button Content="播放/暂停"
+                  Click="OnPlayPauseClick"
+                  Padding="16,10"
+                  CornerRadius="14"
+                  Foreground="#0F172A"
+                  Background="#E0F2FE" />
+          <Button Content="停止"
+                  Click="OnStopClick"
+                  Padding="16,10"
+                  CornerRadius="14"
+                  Foreground="#0F172A"
+                  Background="#F1F5F9" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1"
+            CornerRadius="26"
+            Padding="16"
+            Background="#FFFFFFFF"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            BoxShadow="0 22 60 0 #210F172A">
+      <Border CornerRadius="18"
+              Padding="10"
+              Background="#FFFFFF"
+              BorderBrush="#E2E8F0"
+              BorderThickness="1">
+        <at:AlphaTab x:Name="AlphaTabView"
+                     BarCursorFill="#33F59E0B"
+                     BeatCursorFill="#CC2563EB"
+                     SelectionFill="#1A14B8A6" />
+      </Border>
     </Border>
   </Grid>
 </Window>
