@@ -1,6 +1,11 @@
+using System;
+using System.Threading;
 using AlphaTab.Platform;
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Styling;
 using Avalonia.Threading;
 
 namespace AlphaTab.Avalonia;
@@ -8,6 +13,7 @@ namespace AlphaTab.Avalonia;
 internal class AvaloniaControlContainer : IContainer
 {
     private double _targetX;
+    private CancellationTokenSource? _animationCts;
 
     public Control Control { get; }
 
@@ -100,13 +106,67 @@ internal class AvaloniaControlContainer : IContainer
 
     public void StopAnimation()
     {
-        Dispatcher.UIThread.Post(() => { Canvas.SetLeft(Control, _targetX); });
+        Dispatcher.UIThread.Post(() =>
+        {
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
+            _animationCts = null;
+            Canvas.SetLeft(Control, _targetX);
+        });
     }
 
     public void TransitionToX(double duration, double x)
     {
         _targetX = x;
-        Dispatcher.UIThread.Post(() => { Canvas.SetLeft(Control, x); });
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Cancel and clean up any previous animation
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
+            _animationCts = null;
+
+            // Invalid, NaN, Infinity, zero, or negative duration: place immediately
+            if (double.IsNaN(duration) || double.IsInfinity(duration) || duration <= 0)
+            {
+                Canvas.SetLeft(Control, x);
+                return;
+            }
+
+            double currentX = Canvas.GetLeft(Control);
+            if (double.IsNaN(currentX)) currentX = 0;
+
+            // Already at target — snap and skip animation
+            if (Math.Abs(currentX - x) < 0.5)
+            {
+                Canvas.SetLeft(Control, x);
+                return;
+            }
+
+            var cts = new CancellationTokenSource();
+            _animationCts = cts;
+            var token = cts.Token;
+
+            var animation = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(duration),
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame
+                    {
+                        Cue = new Cue(0d),
+                        Setters = { new Setter(Canvas.LeftProperty, currentX) }
+                    },
+                    new KeyFrame
+                    {
+                        Cue = new Cue(1d),
+                        Setters = { new Setter(Canvas.LeftProperty, x) }
+                    }
+                }
+            };
+
+            _ = animation.RunAsync(Control, token);
+        });
     }
 
     public void Clear()
