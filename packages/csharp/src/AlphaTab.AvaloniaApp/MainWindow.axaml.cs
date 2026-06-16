@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using AlphaTab.Model;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -10,10 +12,27 @@ namespace AlphaTab.AvaloniaApp
 {
     public partial class MainWindow : Window
     {
+        private readonly string? _startupScorePath;
+
         public MainWindow()
+            : this(null)
         {
+        }
+
+        public MainWindow(string? startupScorePath)
+        {
+            _startupScorePath = startupScorePath;
             InitializeComponent();
             ConfigureChineseFonts();
+            Opened += OnOpened;
+        }
+
+        private async void OnOpened(object? sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(_startupScorePath) && File.Exists(_startupScorePath))
+            {
+                await LoadScoreFile(_startupScorePath);
+            }
         }
 
         private void ConfigureChineseFonts()
@@ -58,9 +77,20 @@ namespace AlphaTab.AvaloniaApp
             }
 
             await using var stream = await file.OpenReadAsync();
+            await LoadScoreStream(stream, file.Name);
+        }
+
+        private async Task LoadScoreFile(string filePath)
+        {
+            using var stream = File.OpenRead(filePath);
+            await LoadScoreStream(stream, filePath);
+        }
+
+        private async Task LoadScoreStream(Stream stream, string fileName)
+        {
             using var memory = new MemoryStream();
             await stream.CopyToAsync(memory);
-            AlphaTabView.Settings.Importer.Encoding = GetImporterEncoding(file.Name);
+            AlphaTabView.Settings.Importer.Encoding = GetImporterEncoding(fileName);
             AlphaTabView.Api?.Load(memory.ToArray(), new List<double> { -1 });
         }
 
