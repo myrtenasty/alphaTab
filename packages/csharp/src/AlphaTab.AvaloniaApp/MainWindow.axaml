@@ -77,7 +77,8 @@
         <at:AlphaTab x:Name="AlphaTabView"
                      BarCursorFill="#33F59E0B"
                      BeatCursorFill="#CC2563EB"
-                     SelectionFill="#1A14B8A6" />
+                     SelectionFill="#1A14B8A6"
+                     PlaybackNoteHighlightFill="#802563EB" />
       </Border>
     </Border>
   </Grid>

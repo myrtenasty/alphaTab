@@ -54,6 +54,13 @@ public class AlphaTab : ContentControl
             new SolidColorBrush(MediaColor.FromArgb(25, 64, 64, 255)));
 
     /// <summary>
+    /// Identifies the <see cref="PlaybackNoteHighlightFill"/> styled property.
+    /// </summary>
+    public static readonly StyledProperty<IBrush> PlaybackNoteHighlightFillProperty =
+        AvaloniaProperty.Register<AlphaTab, IBrush>(nameof(PlaybackNoteHighlightFill),
+            new SolidColorBrush(MediaColor.FromArgb(128, 37, 99, 235)));
+
+    /// <summary>
     /// Identifies the <see cref="Api"/> direct property.
     /// </summary>
     public static readonly DirectProperty<AlphaTab, AlphaTabApiBase<AlphaTab>?> ApiProperty =
@@ -102,6 +109,15 @@ public class AlphaTab : ContentControl
     {
         get => GetValue(SelectionFillProperty);
         set => SetValue(SelectionFillProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the brush used to highlight the currently playing note.
+    /// </summary>
+    public IBrush PlaybackNoteHighlightFill
+    {
+        get => GetValue(PlaybackNoteHighlightFillProperty);
+        set => SetValue(PlaybackNoteHighlightFillProperty, value);
     }
 
     /// <summary>
@@ -159,7 +175,8 @@ public class AlphaTab : ContentControl
         }
         else if (change.Property == BarCursorFillProperty ||
                  change.Property == BeatCursorFillProperty ||
-                 change.Property == SelectionFillProperty)
+                 change.Property == SelectionFillProperty ||
+                 change.Property == PlaybackNoteHighlightFillProperty)
         {
             Api?.Render();
         }
