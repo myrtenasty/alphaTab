@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using AlphaTab.Platform;
@@ -23,6 +24,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
     private readonly Canvas _layoutPanel;
     private readonly Canvas _renderPanel;
     private readonly Canvas _overlayPanel;
+    private readonly Canvas _highlightLayer;
     private readonly Dictionary<string, Image> _resultIdToElementLookup = new Dictionary<string, Image>();
     private event Action? InternalRootContainerBecameVisible;
     private double _contentWidth;
@@ -40,6 +42,11 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         _layoutPanel = layoutPanel;
         _renderPanel = renderPanel;
         _overlayPanel = overlayPanel;
+        _highlightLayer = new Canvas
+        {
+            Tag = "at-highlight-overlays",
+            IsHitTestVisible = false
+        };
         RootContainer = new AvaloniaControlContainer(scrollViewer);
         UpdateDpiScale(false);
         _scrollViewer.SizeChanged += OnRootContainerPossiblyBecameVisible;
@@ -168,6 +175,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         _scrollViewer.SizeChanged -= OnRootContainerPossiblyBecameVisible;
         _scrollViewer.PropertyChanged -= OnRootContainerPropertyChanged;
         _scrollViewer.AttachedToVisualTree -= OnRootContainerAttachedToVisualTree;
+        _highlightLayer.Children.Clear();
         _renderPanel.Children.Clear();
         _overlayPanel.Children.Clear();
         _scrollViewer.Content = null;
@@ -185,6 +193,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
             _resultIdToElementLookup.Clear();
             _contentWidth = 0;
             _contentHeight = 0;
+            Dispatcher.UIThread.Post(() => _highlightLayer.Children.Clear());
             UpdateCanvasSize();
         });
         base.InitialRender();
@@ -199,8 +208,21 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         _renderPanel.Height = height;
         _overlayPanel.Width = width;
         _overlayPanel.Height = height;
+        _highlightLayer.Width = width;
+        _highlightLayer.Height = height;
         _layoutPanel.Width = width;
         _layoutPanel.Height = height;
+    }
+
+    private void EnsureHighlightLayer()
+    {
+        if (!_overlayPanel.Children.Contains(_highlightLayer))
+        {
+            var cursorIndex = _overlayPanel.Children.OfType<Canvas>()
+                .Select((child, index) => new { child, index })
+                .FirstOrDefault(item => "at-cursors".Equals(item.child.Tag))?.index;
+            _overlayPanel.Children.Insert(cursorIndex ?? 0, _highlightLayer);
+        }
     }
 
     public override void TriggerEvent(IContainer container, string eventName,
@@ -307,6 +329,7 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     public override void DestroyCursors()
     {
+        _highlightLayer.Children.Clear();
         var cursors = _overlayPanel.Children.OfType<Canvas>()
             .FirstOrDefault(c => "at-cursors".Equals(c.Tag));
         if (cursors != null)
@@ -345,7 +368,9 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
         cursorWrapper.Children.Add(selectionWrapper);
         cursorWrapper.Children.Add(barCursor);
         cursorWrapper.Children.Add(beatCursor);
-        _overlayPanel.Children.Insert(0, cursorWrapper);
+        EnsureHighlightLayer();
+        var highlightIndex = _overlayPanel.Children.IndexOf(_highlightLayer);
+        _overlayPanel.Children.Insert(highlightIndex >= 0 ? highlightIndex + 1 : 0, cursorWrapper);
 
         return new Cursors(
             new AvaloniaControlContainer(cursorWrapper),
@@ -362,10 +387,127 @@ internal class AvaloniaUiFacade : ManagedUiFacade<AlphaTab>
 
     public override void RemoveHighlights()
     {
+        Dispatcher.UIThread.Post(() =>
+        {
+            EnsureHighlightLayer();
+            _highlightLayer.Children.Clear();
+        });
     }
 
     public override void HighlightElements(string groupId, double masterBarIndex)
     {
+        if (!TryParseBeatGroupId(groupId, out var beatId))
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            EnsureHighlightLayer();
+
+            var masterBar = Api.BoundsLookup?.FindMasterBarByIndex(masterBarIndex);
+            if (masterBar == null)
+            {
+                return;
+            }
+
+            foreach (var bar in masterBar.Bars)
+            {
+                foreach (var beat in bar.Beats)
+                {
+                    if (beat.Beat.Id != beatId)
+                    {
+                        continue;
+                    }
+
+                    AddBeatHighlight(beat);
+                }
+            }
+        });
+    }
+
+    private static bool TryParseBeatGroupId(string groupId, out double beatId)
+    {
+        beatId = 0;
+        if (string.IsNullOrEmpty(groupId) || groupId.Length < 2 || groupId[0] != 'b')
+        {
+            return false;
+        }
+
+        for (var i = 1; i < groupId.Length; i++)
+        {
+            if (!char.IsDigit(groupId[i]))
+            {
+                return false;
+            }
+        }
+
+        return double.TryParse(groupId.Substring(1), NumberStyles.None, CultureInfo.InvariantCulture, out beatId);
+    }
+
+    private void AddBeatHighlight(BeatBounds beat)
+    {
+        var notes = beat.Notes;
+        var addedNoteHighlight = false;
+        if (notes != null && notes.Count > 0)
+        {
+            foreach (var note in notes)
+            {
+                var bounds = note.NoteHeadBounds;
+                if (!IsRenderableBounds(bounds))
+                {
+                    continue;
+                }
+
+                const double padding = 2;
+                var highlight = new global::Avalonia.Controls.Shapes.Ellipse
+                {
+                    Fill = SettingsContainer.PlaybackNoteHighlightFill,
+                    IsHitTestVisible = false,
+                    Width = Math.Max(0, bounds.W + padding * 2),
+                    Height = Math.Max(0, bounds.H + padding * 2)
+                };
+                Canvas.SetLeft(highlight, bounds.X - padding);
+                Canvas.SetTop(highlight, bounds.Y - padding);
+                _highlightLayer.Children.Add(highlight);
+                addedNoteHighlight = true;
+            }
+        }
+
+        if (!addedNoteHighlight)
+        {
+            AddBeatFallbackHighlight(beat.VisualBounds);
+        }
+    }
+
+    private void AddBeatFallbackHighlight(Bounds bounds)
+    {
+        if (!IsRenderableBounds(bounds))
+        {
+            return;
+        }
+
+        var highlight = new global::Avalonia.Controls.Shapes.Rectangle
+        {
+            Fill = SettingsContainer.PlaybackNoteHighlightFill,
+            IsHitTestVisible = false,
+            Width = bounds.W,
+            Height = bounds.H,
+            RadiusX = 3,
+            RadiusY = 3
+        };
+        Canvas.SetLeft(highlight, bounds.X);
+        Canvas.SetTop(highlight, bounds.Y);
+        _highlightLayer.Children.Add(highlight);
+    }
+
+    private static bool IsRenderableBounds(Bounds bounds)
+    {
+        return !double.IsNaN(bounds.X) && !double.IsNaN(bounds.Y) &&
+               !double.IsNaN(bounds.W) && !double.IsNaN(bounds.H) &&
+               !double.IsInfinity(bounds.X) && !double.IsInfinity(bounds.Y) &&
+               !double.IsInfinity(bounds.W) && !double.IsInfinity(bounds.H) &&
+               bounds.W > 0 && bounds.H > 0;
     }
 
     public override IContainer CreateSelectionElement()
